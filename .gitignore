@@ -145,8 +145,3 @@ cython_debug/
 
 #DataBase
 test.db
-
-# PyCharm
-.idea/
-/flaskr/tutorial_canciones_testing.db
-/flaskr/tutorial_canciones.db
