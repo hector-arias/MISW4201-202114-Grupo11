@@ -1,0 +1,35 @@
+<app-header></app-header>
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-6">
+      <div *ngIf="!listaUsuarios||listaUsuarios.length==0" class="card w-100 mx-5 my-5 text-center">
+        <div class="card-body">
+          <h5 class="card-title">Compartir {{labelMedio}}: {{titulo}} </h5>
+          <p class="card-text">No existen usuarios con los que pueda compartir actualmente</p>
+          <a href="#" class="btn btn-primary" (click)="volver()">Volver</a>
+        </div>
+      </div>
+      <div  *ngIf="listaUsuarios.length!=0" class="card mx-3 my-5">
+        <div class="row">
+          <div class="col-12 text-center">
+            <p class="mt-5 mb-2 fs-3 fw-bold">Compartir {{labelMedio}} : {{titulo}} </p>
+            <div class="input-group my-2">
+              <input #busqueda type="search" class="form-control" placeholder="Buscar usuario" aria-label="Search" (keyup)="buscarUsuario(busqueda.value)">
+            </div>
+                <table class="table table-hover mb-0" aria-describedby="colecName">
+              <tbody>
+              <tr *ngFor="let user of listaUsuarios; index as i" >
+                <td >{{user.nombre}}</td>
+                <td > <input type="checkbox" [checked]="user.checked"  value="{{user.id}}" (change)="user.checked = !user.checked"></td>
+              </tr>
+              </tbody>
+            </table>
+            <div *ngIf="listaUsuarios.length>0" >
+              <button type="button" class="btn btn-primary" (click)="listar()">Compartir</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
