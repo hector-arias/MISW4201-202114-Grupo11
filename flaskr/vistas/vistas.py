@@ -114,7 +114,7 @@ class VistaAlbumsUsuario(Resource):
 
         return album_schema.dump(nuevo_album)
 
-    @jwt_required()
+    # @jwt_required()
     def get(self, id_usuario):
         usuario = Usuario.query.get_or_404(id_usuario)
         return [album_schema.dump(al) for al in usuario.albumes]
