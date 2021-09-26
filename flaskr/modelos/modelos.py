@@ -18,6 +18,19 @@ album_compartido = db.Table('album_compartido',
                             db.Column('usuario_id', db.Integer, db.ForeignKey('usuario.id'), primary_key=True),
                             db.Column('album_id', db.Integer, db.ForeignKey('album.id'), primary_key=True))
 
+
+class Medio(enum.Enum):
+   DISCO = 1
+   CASETE = 2
+   CD = 3
+
+class Genero(enum.Enum):
+    SALSA =1
+    ROCK =2
+    POP = 3
+    BALADA = 4
+    CLASICA = 5
+
 class Cancion(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     titulo = db.Column(db.String(128))
@@ -25,13 +38,11 @@ class Cancion(db.Model):
     segundos = db.Column(db.Integer)
     interprete = db.Column(db.String(128))
     usuario = db.Column(db.Integer, db.ForeignKey("usuario.id"))
+    favorita = db.Column(db.Integer,default=0)
     albumes = db.relationship('Album', secondary = 'album_cancion', back_populates="canciones")
-    usuarios = db.relationship('Usuario', secondary = 'cancion_compartida', back_populates="canciones2")
+    usuarios_compartidos = db.relationship('Usuario', secondary = 'cancion_compartida', back_populates="canciones_compartidas")
+    genero = db.Column(db.Enum(Genero))
 
-class Medio(enum.Enum):
-   DISCO = 1
-   CASETE = 2
-   CD = 3
 
 class Album(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -42,6 +53,7 @@ class Album(db.Model):
     usuario = db.Column(db.Integer, db.ForeignKey("usuario.id"))
     canciones = db.relationship('Cancion', secondary='album_cancion', back_populates="albumes")
     compartido_con = db.relationship('Usuario', secondary=album_compartido, back_populates="albumes_compartidos")
+    genero = db.Column(db.Enum(Genero))
 
 
 class Usuario(db.Model):
@@ -50,8 +62,8 @@ class Usuario(db.Model):
     contrasena = db.Column(db.String(50))
     albumes = db.relationship('Album', cascade='all, delete, delete-orphan')
     canciones = db.relationship('Cancion', cascade='all, delete, delete-orphan')
-    canciones2 = db.relationship('Cancion', secondary='cancion_compartida', back_populates="usuarios")
     albumes_compartidos = db.relationship('Album', secondary=album_compartido, back_populates="compartido_con")
+    canciones_compartidas = db.relationship('Cancion', secondary = 'cancion_compartida', back_populates="usuarios_compartidos")
 
 
 class UsuarioLista(db.Model):
@@ -67,6 +79,7 @@ class EnumADiccionario(fields.Field):
 
 
 class CancionSchema(SQLAlchemyAutoSchema):
+    genero = EnumADiccionario(attribute=("genero"))
     class Meta:
         model = Cancion
         include_relationships = True
@@ -74,7 +87,7 @@ class CancionSchema(SQLAlchemyAutoSchema):
 
 class AlbumSchema(SQLAlchemyAutoSchema):
     medio = EnumADiccionario(attribute=("medio"))
-
+    genero = EnumADiccionario(attribute=("genero"))
     class Meta:
         model = Album
         include_relationships = True

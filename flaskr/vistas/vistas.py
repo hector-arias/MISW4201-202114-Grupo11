@@ -14,15 +14,26 @@ album_schema = AlbumSchema()
 class VistaCanciones(Resource):
 
     def get(self, id_usuario):
-        usuario = Usuario.query.get_or_404(id_usuario)
-        return [cancion_schema.dump(ca) for ca in usuario.canciones]
+       
+        c_propias = Cancion.query.filter_by(usuario=id_usuario).all()
+        c_propias_serializadas = [cancion_schema.dump(ca) for ca in c_propias]
 
+        c_compartidas = Cancion.query.filter(Cancion.usuarios_compartidos.any(id=id_usuario)).all()
+        c_compartidas_serializadas = [cancion_schema.dump(ca) for ca in c_compartidas]
+
+        if len(c_compartidas + c_propias) == 0:
+            return 'El usuario no tiene canciones compartidas ni propias.',400
+
+        return (c_propias_serializadas + c_compartidas_serializadas), 200
 
 class VistaCancionesUsuario(Resource):
 
     def post(self, id_usuario):
-        nueva_cancion = Cancion(titulo=request.json["titulo"], minutos=request.json["minutos"],
-                                segundos=request.json["segundos"], interprete=request.json["interprete"])
+        nueva_cancion = Cancion(titulo=request.json["titulo"],
+                                minutos=request.json["minutos"],
+                                segundos=request.json["segundos"],
+                                interprete=request.json["interprete"],
+                                genero=request.json["genero"])
         usuario = Usuario.query.get_or_404(id_usuario)
         usuario.canciones.append(nueva_cancion)
 
@@ -30,7 +41,7 @@ class VistaCancionesUsuario(Resource):
             db.session.commit()
         except IntegrityError:
             db.session.rollback()
-            return 'El usuario ya tiene un album con dicho nombre', 409
+            return 'El usuario ya tiene una cancion con dicho nombre', 409
 
         return cancion_schema.dump(nueva_cancion)
 
@@ -46,6 +57,7 @@ class VistaCancion(Resource):
         cancion.minutos = request.json.get("minutos", cancion.minutos)
         cancion.segundos = request.json.get("segundos", cancion.segundos)
         cancion.interprete = request.json.get("interprete", cancion.interprete)
+        cancion.genero = request.json.get("genero", cancion.genero)
         db.session.commit()
         return cancion_schema.dump(cancion)
 
@@ -55,6 +67,15 @@ class VistaCancion(Resource):
         db.session.commit()
         return '', 204
 
+
+class VistaCancionFavorita(Resource):
+    @jwt_required()
+    def put(self, id_cancion):
+        cancion = Cancion.query.get_or_404(id_cancion)
+        cancion.favorita = request.json.get("favorita", cancion.favorita)
+        db.session.commit()
+        return cancion_schema.dump(cancion)
+        
 
 class VistaAlbumesCanciones(Resource):
     def get(self, id_cancion):
@@ -102,7 +123,8 @@ class VistaAlbumsUsuario(Resource):
     @jwt_required()
     def post(self, id_usuario):
         nuevo_album = Album(titulo=request.json["titulo"], anio=request.json["anio"],
-                            descripcion=request.json["descripcion"], medio=request.json["medio"])
+                            descripcion=request.json["descripcion"], medio=request.json["medio"],
+                            genero=request.json["genero"])
         usuario = Usuario.query.get_or_404(id_usuario)
         usuario.albumes.append(nuevo_album)
 
@@ -114,10 +136,20 @@ class VistaAlbumsUsuario(Resource):
 
         return album_schema.dump(nuevo_album)
 
-    # @jwt_required()
+    @jwt_required()
     def get(self, id_usuario):
-        usuario = Usuario.query.get_or_404(id_usuario)
-        return [album_schema.dump(al) for al in usuario.albumes]
+        Usuario.query.get_or_404(id_usuario)
+        albumes_usuario = Album.query.filter_by(usuario=id_usuario).all()
+        albumes_usuario_serializados = [album_schema.dump(album_usuario) for album_usuario in albumes_usuario]
+
+        albumes_compartidos = Album.query.filter(Album.compartido_con.any(id=id_usuario)).all()
+        albumes_compartidos_serializados = [album_schema.dump(album_compartido) for album_compartido in
+                                            albumes_compartidos]
+
+        if len(albumes_usuario + albumes_compartidos) == 0:
+            return 'El usuario no tiene álbumes propios ni compartidos.', 400
+
+        return (albumes_usuario_serializados + albumes_compartidos_serializados), 200
 
 
 class VistaCancionesAlbum(Resource):
@@ -156,6 +188,7 @@ class VistaAlbum(Resource):
         album.anio = request.json.get("anio", album.anio)
         album.descripcion = request.json.get("descripcion", album.descripcion)
         album.medio = request.json.get("medio", album.medio)
+        album.genero = request.json.get("genero", album.genero)
         db.session.commit()
         return album_schema.dump(album)
 
@@ -180,17 +213,17 @@ class VistaCancionesCompartidas(Resource):
         else:
             return 'falta id usuario', 404
 
-        for x in usuarios_compartir:
-            print(x)
-            if cancion.usuario == x:
+        for usuario in usuarios_compartir:
+            print(usuario)
+            if cancion.usuario == usuario:
                 return 'No se puede compartir con si mismo', 404
 
-        for x in usuarios_compartir:
+        for usuario in usuarios_compartir:
 
-            user = Usuario.query.get(x)
+            user = Usuario.query.get(usuario)
             print("****user ", user)
             if user is not None:
-                cancion.usuarios.append(user)
+                cancion.usuarios_compartidos.append(user)
                 db.session.commit()
             else:
                 return 'Canción errónea', 404

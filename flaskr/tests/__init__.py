@@ -6,9 +6,10 @@ from flask_restful import Api
 
 from flaskr import create_app, urls
 from ..modelos import db, Usuario
+from .. import app
 from ..vistas import VistaCanciones, VistaCancion, VistaAlbumesCanciones, VistaSignIn, VistaLogIn, VistaAlbumsUsuario, \
     VistaAlbum, VistaCancionesAlbum, VistaAlbumCompartido, VistaCancionesUsuario, VistaCancionesCompartidas, \
-    VistaUsuario
+    VistaUsuario,VistaCancionFavorita,VistaUsuarioAlbum
 
 
 class BaseTestClass(unittest.TestCase):
@@ -23,7 +24,7 @@ class BaseTestClass(unittest.TestCase):
 
         # Crea un contexto de aplicación
         with self.app.app_context() as c:
-            c.push()
+            c.push()            
             self.load_context()
             # Creamos usuarios
             BaseTestClass.create_user(self.USUARIO, self.CONTRASENA)
@@ -32,20 +33,8 @@ class BaseTestClass(unittest.TestCase):
     def load_context(self):
         # Crea las tablas de la base de datos
         db.create_all()
-        cors = CORS(self.app)
-        api = Api(self.app)
-        api.add_resource(VistaCanciones, urls['VistaCanciones'])
-        api.add_resource(VistaCancionesUsuario, urls['VistaCancionesUsuario'])
-        api.add_resource(VistaCancion, urls['VistaCancion'])
-        api.add_resource(VistaAlbumesCanciones, urls['VistaAlbumesCanciones'])
-        api.add_resource(VistaSignIn, urls['VistaSignIn'])
-        api.add_resource(VistaLogIn, urls['VistaLogIn'])
-        api.add_resource(VistaAlbumsUsuario, urls['VistaAlbumsUsuario'])
-        api.add_resource(VistaAlbum, urls['VistaAlbum'])
-        api.add_resource(VistaCancionesAlbum, urls['VistaCancionesAlbum'])
-        api.add_resource(VistaCancionesCompartidas, urls['VistaCancionesCompartidas'])
-        api.add_resource(VistaUsuario, urls['VistaUsuario'])
-        api.add_resource(VistaAlbumCompartido, urls['VistaAlbumCompartido'])
+        cors = CORS(self.app)       
+        app.load_context_app(self.app)
         jwt = JWTManager(self.app)
 
     def tearDown(self):

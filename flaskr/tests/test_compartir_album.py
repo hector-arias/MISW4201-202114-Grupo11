@@ -7,7 +7,8 @@ def adicionar_album(client, id_usuario, token):
         "titulo": "Titulo",
         "anio": 2021,
         "descripcion": "Descripcion",
-        "medio": "DISCO"
+        "medio": "DISCO",
+        "genero": "SALSA"
     }, headers={'Authorization': 'Bearer {0}'.format(token)})
 
 

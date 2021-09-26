@@ -7,7 +7,8 @@ urls = {'VistaCanciones': '/canciones/<int:id_usuario>', 'VistaCancionesUsuario'
         'VistaCancionesAlbum': '/album/<int:id_album>/canciones', 'VistaCancionesCompartidas': '/canciones/usuarios',
         'VistaUsuario': '/usuarios/<int:id_cancion>/canciones',
         'VistaUsuarioAlbumes': '/usuarios/<int:id_album>/albumes',
-        'VistaAlbumCompartido': '/album/<int:id_album>/compartir'}
+        'VistaAlbumCompartido': '/album/<int:id_album>/compartir',
+        'VistaCancionFavorita': '/cancion-favorita/<int:id_cancion>'}
 
 
 def create_app(config_name):
